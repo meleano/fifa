@@ -44,7 +44,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   // Archivos estáticos
-  let filePath = path.join(__dirname, url.pathname === '/' ? 'index.html' : url.pathname);
+  let filePath = path.join(__dirname, 'public', url.pathname === '/' ? 'index.html' : url.pathname);
   filePath = path.normalize(filePath);
 
   if (!filePath.startsWith(__dirname)) {

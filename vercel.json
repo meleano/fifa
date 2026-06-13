@@ -1,7 +1,7 @@
 {
   "version": 2,
   "buildCommand": null,
-  "outputDirectory": ".",
+  "outputDirectory": "public",
   "rewrites": [
     { "source": "/api/proxy", "destination": "/api/proxy.mjs" },
     { "source": "/(.*)", "destination": "/index.html" }
