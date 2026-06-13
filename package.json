@@ -1,0 +1,13 @@
+{
+  "name": "fifa-2026-media-center",
+  "version": "1.0.0",
+  "private": true,
+  "description": "FIFA World Cup 2026 — Centro de Medios con proxy de manifiestos HLS/DASH",
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node --watch server.mjs",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {}
+}

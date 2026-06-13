@@ -1,0 +1,7 @@
+
+  🏆 FIFA 2026 Media Center — Servidor local
+  ─────────────────────────────────────────
+  🌐 Web:    http://localhost:3001
+  🔧 Proxy:  http://localhost:3001/api/proxy?stream=rtve1
+  📺 Abre http://localhost:3001 en tu navegador
+
