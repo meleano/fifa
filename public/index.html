@@ -94,7 +94,9 @@ nav a:hover::after{width:100%}
 .match-card.upcoming{border-left:3px solid var(--orange)}
 .match-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em}
 .match-group{color:var(--accent);font-weight:700}
-.match-date{color:var(--text3)}
+.match-date{color:var(--text3);display:flex;align-items:center;gap:4px}
+.time-esp{color:var(--accent2);font-weight:700}
+.time-local{color:var(--text3);font-weight:400;font-size:0.6rem}
 .match-teams{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-bottom:10px}
 .team{display:flex;align-items:center;gap:8px;font-size:0.85rem;font-weight:700}
 .team.away{justify-content:flex-end}
@@ -521,9 +523,17 @@ function parseScore(s) {
 }
 function parseDate(date, time) {
   if (!date) return null;
-  let t = '19:00:00Z';
-  if (time) { const p = time.split(' '); if (p.length > 0) t = p[0] + ':00Z'; }
-  try { return new Date(date + 'T' + t).toISOString(); } catch { return null; }
+  if (!time) return new Date(date + 'T19:00:00Z').toISOString();
+  const parts = time.split(' ');
+  const hhmm = parts[0];
+  let offset = 0;
+  if (parts.length > 1 && parts[1].startsWith('UTC')) {
+    const num = parseInt(parts[1].replace('UTC', '').replace('+', '')) || 0;
+    offset = num;
+  }
+  const d = new Date(date + 'T' + hhmm + ':00Z');
+  d.setUTCHours(d.getUTCHours() - offset);
+  return d.toISOString();
 }
 function groupLetter(g) {
   if (!g) return '?';
@@ -560,11 +570,13 @@ async function loadMatchData() {
       }
       const score = parseScore(m.score);
       const played = score !== null;
+      const venueTz = m.time ? (m.time.split(' ').slice(1).join(' ') || '') : '';
       return {
         id: 'M' + counter, group, round,
         home: m.team1, away: m.team2,
         hf: FLAGS[m.team1] || '🏳️', af: FLAGS[m.team2] || '🏳️',
         date: parseDate(m.date, m.time),
+        venueTz,
         venue: m.ground || m.location || 'Por definir',
         played,
         homeScore: played ? score[0] : null,
@@ -620,11 +632,16 @@ function renderEvents(m) {
 
 function buildMatchCard(m,isResult) {
   const d = new Date(m.date);
-  const localDate = d.toLocaleDateString(currentLang==='es'?'es-ES':'en-US',{weekday:'short',day:'numeric',month:'short'});
-  const localTime = d.toLocaleTimeString(currentLang==='es'?'es-ES':'en-US',{hour:'2-digit',minute:'2-digit'});
   const now = new Date();
   const isLive = !m.played && Math.abs(now-d)<7200000;
   const status = m.played?'final':(isLive?'live':'upcoming');
+
+  const espDate = d.toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short',timeZone:'Europe/Madrid'});
+  const espTime = d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Madrid'});
+
+  const TZ_MAP = {'UTC-6':'America/Mexico_City','UTC-5':'America/Chicago','UTC-4':'America/New_York','UTC-7':'America/Los_Angeles',};
+  const venueZone = TZ_MAP[m.venueTz] || (m.venueTz?.startsWith('UTC') ? 'America/New_York' : 'Europe/Madrid');
+  const venTime = d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',timeZone:venueZone});
 
   const roundLabels = {
     group: t('match.group')+' '+m.group,
@@ -641,7 +658,7 @@ function buildMatchCard(m,isResult) {
   card.innerHTML = `
     <div class="match-header">
       <span class="match-group">${roundLabels[m.round]||m.group}</span>
-      <span class="match-date">${localDate} · ${localTime}</span>
+      <span class="match-date">${espDate} · <span class="time-esp">${espTime}</span> <span class="time-local">(${venTime} local)</span></span>
     </div>
     <div class="match-teams">
       <div class="team home"><span class="team-flag">${m.hf}</span>${m.home}</div>
