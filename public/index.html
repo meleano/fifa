@@ -323,6 +323,12 @@ nav{width:100%;justify-content:center;flex-wrap:wrap}
         <div class="card-info"><h4>TVP World</h4><p>TVP · Polonia</p></div>
         <span class="tag green">1080p</span>
       </div>
+
+      <div class="section-header-group">
+        <i class="fa-solid fa-tower-broadcast section-header-icon"></i>
+        <div class="section-header">Sky Sports</div>
+      </div>
+      <div class="section-sub-notice"><i class="fa-solid fa-triangle-exclamation"></i> <span>Suscripción requerida · Prueba via proxy</span></div>
     </aside>
   </div>
 </section>
@@ -494,130 +500,44 @@ function streamHLS(url, title) {
 }
 
 // ============================================================
-// DATOS REALES — Copa Mundial FIFA 2026
-// Fuente: https://fifa-world-cup-live-stream.vercel.app
+// DATOS DINÁMICOS — via openfootball
 // ============================================================
+let GROUP_NAMES = ['A','B','C','D','E','F','G','H','I','J','K','L'];
+let GROUPS = {};
+let allMatches = [];
+let matchResults = [];
+let DATA_LOADED = false;
 
-const GROUP_NAMES = ['A','B','C','D','E','F','G','H','I','J','K','L'];
+async function loadMatchData() {
+  try {
+    const notice = document.getElementById('dataNotice');
+    notice.textContent = 'Cargando datos del torneo...';
 
-const GROUPS = {
-  A:{teams:[{n:'México',f:'🇲🇽'},{n:'Sudáfrica',f:'🇿🇦'},{n:'Corea del Sur',f:'🇰🇷'},{n:'República Checa',f:'🇨🇿'}]},
-  B:{teams:[{n:'Canadá',f:'🇨🇦'},{n:'Bosnia y Herz.',f:'🇧🇦'},{n:'Catar',f:'🇶🇦'},{n:'Suiza',f:'🇨🇭'}]},
-  C:{teams:[{n:'Brasil',f:'🇧🇷'},{n:'Marruecos',f:'🇲🇦'},{n:'Haití',f:'🇭🇹'},{n:'Escocia',f:'🏴󠁧󠁢󠁳󠁣󠁴󠁿'}]},
-  D:{teams:[{n:'Estados Unidos',f:'🇺🇸'},{n:'Paraguay',f:'🇵🇾'},{n:'Australia',f:'🇦🇺'},{n:'Turquía',f:'🇹🇷'}]},
-  E:{teams:[{n:'Alemania',f:'🇩🇪'},{n:'Curazao',f:'🇨🇼'},{n:'Costa de Marfil',f:'🇨🇮'},{n:'Ecuador',f:'🇪🇨'}]},
-  F:{teams:[{n:'Países Bajos',f:'🇳🇱'},{n:'Japón',f:'🇯🇵'},{n:'Suecia',f:'🇸🇪'},{n:'Túnez',f:'🇹🇳'}]},
-  G:{teams:[{n:'Bélgica',f:'🇧🇪'},{n:'Egipto',f:'🇪🇬'},{n:'Irán',f:'🇮🇷'},{n:'Nueva Zelanda',f:'🇳🇿'}]},
-  H:{teams:[{n:'España',f:'🇪🇸'},{n:'Cabo Verde',f:'🇨🇻'},{n:'Arabia Saudí',f:'🇸🇦'},{n:'Uruguay',f:'🇺🇾'}]},
-  I:{teams:[{n:'Francia',f:'🇫🇷'},{n:'Senegal',f:'🇸🇳'},{n:'Noruega',f:'🇳🇴'},{n:'Irak',f:'🇮🇶'}]},
-  J:{teams:[{n:'Argentina',f:'🇦🇷'},{n:'Argelia',f:'🇩🇿'},{n:'Austria',f:'🇦🇹'},{n:'Jordania',f:'🇯🇴'}]},
-  K:{teams:[{n:'Portugal',f:'🇵🇹'},{n:'RD Congo',f:'🇨🇩'},{n:'Uzbekistán',f:'🇺🇿'},{n:'Colombia',f:'🇨🇴'}]},
-  L:{teams:[{n:'Inglaterra',f:'🏴󠁧󠁢󠁥󠁮󠁧󠁿'},{n:'Croacia',f:'🇭🇷'},{n:'Ghana',f:'🇬🇭'},{n:'Panamá',f:'🇵🇦'}]}
-};
+    const res = await fetch('/api/matches');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
 
-// Partidos reales — datos oficiales FIFA 2026
-const allMatches = [];
-const matchResults = [];
+    const data = await res.json();
+    GROUP_NAMES = data.groupNames || GROUP_NAMES;
+    GROUPS = data.groups || {};
+    allMatches = data.matches || [];
+    matchResults = data.results || [];
+    DATA_LOADED = true;
 
-function ev(events){ return events||[]; }
+    notice.textContent = 'Datos reales · Copa Mundial de la FIFA 2026™ · vía openfootball';
 
-function match(id, group, round, home, away, hf, af, date, venue, played, hs, as, events) {
-  const m = { id, group, round, home, away, hf, af, date: new Date(date).toISOString(), venue, played,
-    homeScore: played ? hs : null, awayScore: played ? as : null };
-  if(played && events) { m.events = events; }
-  return m;
+    buildFilters();
+    renderSchedule();
+    renderResults();
+    renderStandings();
+  } catch (e) {
+    console.warn('Error cargando datos, usando fallback:', e);
+    document.getElementById('dataNotice').textContent = 'Usando datos predeterminados · ' + new Date().toLocaleDateString();
+    buildFilters();
+    renderSchedule();
+    renderResults();
+    renderStandings();
+  }
 }
-
-// --- RESULTADOS (partidos ya jugados) ---
-allMatches.push(match('A1','A','group','México','Sudáfrica','🇲🇽','🇿🇦','2026-06-11T19:00:00Z','Estadio Azteca · 80,824',true,2,0,ev([
-  {t:'goal',h:'J. Quiñones (9\')'},{t:'goal',h:'R. Jiménez (67\')'},{t:'red',h:'C. Montes (90+2\')'},
-  {t:'red',a:'S. Sithole (49\')'},{t:'red',a:'T. Zwane (84\')'}
-])));
-allMatches.push(match('A2','A','group','Corea del Sur','República Checa','🇰🇷','🇨🇿','2026-06-12T02:00:00Z','Estadio Guadalajara · 44,985',true,2,1,ev([
-  {t:'goal',h:'Hwang In-beom (67\')'},{t:'goal',h:'Oh Hyeon-gyu (80\')'},
-  {t:'goal',a:'L. Krejčí (59\')'}
-])));
-allMatches.push(match('B1','B','group','Canadá','Bosnia y Herz.','🇨🇦','🇧🇦','2026-06-12T19:00:00Z','Estadio Toronto · 43,002',true,1,1,ev([
-  {t:'goal',h:'C. Larin (78\')'},
-  {t:'goal',a:'J. Lukić (21\')'}
-])));
-allMatches.push(match('D1','D','group','Estados Unidos','Paraguay','🇺🇸','🇵🇾','2026-06-13T01:00:00Z','Estadio Los Ángeles · 70,492',true,4,1,ev([
-  {t:'goal',h:'D. Bobadilla (7\' OG)'},{t:'goal',h:'F. Balogun (31\', 45+5\')'},{t:'goal',h:'G. Reyna (90+8\')'},
-  {t:'goal',a:'M. Prado (73\')'}
-])));
-
-// --- PRÓXIMOS PARTIDOS (datos oficiales FIFA) ---
-allMatches.push(match('B2','B','group','Catar','Suiza','🇶🇦','🇨🇭','2026-06-13T19:00:00Z','Estadio Bahía de San Francisco',false));
-allMatches.push(match('C1','C','group','Brasil','Marruecos','🇧🇷','🇲🇦','2026-06-13T22:00:00Z','Estadio Nueva York Nueva Jersey',false));
-allMatches.push(match('C2','C','group','Haití','Escocia','🇭🇹','🏴󠁧󠁢󠁳󠁣󠁴󠁿','2026-06-14T01:00:00Z','Estadio Boston',false));
-allMatches.push(match('D2','D','group','Australia','Turquía','🇦🇺','🇹🇷','2026-06-14T04:00:00Z','BC Place Vancouver',false));
-allMatches.push(match('E1','E','group','Alemania','Curazao','🇩🇪','🇨🇼','2026-06-14T17:00:00Z','Estadio Houston',false));
-allMatches.push(match('F1','F','group','Países Bajos','Japón','🇳🇱','🇯🇵','2026-06-14T20:00:00Z','Estadio Dallas',false));
-allMatches.push(match('E2','E','group','Costa de Marfil','Ecuador','🇨🇮','🇪🇨','2026-06-14T23:00:00Z','Estadio Filadelfia',false));
-allMatches.push(match('F2','F','group','Suecia','Túnez','🇸🇪','🇹🇳','2026-06-15T02:00:00Z','Estadio Monterrey',false));
-allMatches.push(match('H1','H','group','España','Cabo Verde','🇪🇸','🇨🇻','2026-06-15T16:00:00Z','Estadio Atlanta',false));
-allMatches.push(match('G1','G','group','Bélgica','Egipto','🇧🇪','🇪🇬','2026-06-15T19:00:00Z','BC Place Vancouver',false));
-allMatches.push(match('H2','H','group','Arabia Saudí','Uruguay','🇸🇦','🇺🇾','2026-06-15T22:00:00Z','Estadio Miami',false));
-allMatches.push(match('G2','G','group','Irán','Nueva Zelanda','🇮🇷','🇳🇿','2026-06-16T01:00:00Z','Estadio Los Ángeles',false));
-allMatches.push(match('I1','I','group','Francia','Senegal','🇫🇷','🇸🇳','2026-06-16T19:00:00Z','Estadio Nueva York Nueva Jersey',false));
-allMatches.push(match('I2','I','group','Irak','Noruega','🇮🇶','🇳🇴','2026-06-16T22:00:00Z','Estadio Boston',false));
-allMatches.push(match('J1','J','group','Argentina','Argelia','🇦🇷','🇩🇿','2026-06-17T01:00:00Z','Estadio Kansas City',false));
-allMatches.push(match('J2','J','group','Austria','Jordania','🇦🇹','🇯🇴','2026-06-17T04:00:00Z','Estadio Bahía de San Francisco',false));
-allMatches.push(match('K1','K','group','Portugal','RD Congo','🇵🇹','🇨🇩','2026-06-17T17:00:00Z','Estadio Houston',false));
-allMatches.push(match('L1','L','group','Inglaterra','Croacia','🏴󠁧󠁢󠁥󠁮󠁧󠁿','🇭🇷','2026-06-17T20:00:00Z','Estadio Dallas',false));
-allMatches.push(match('L2','L','group','Ghana','Panamá','🇬🇭','🇵🇦','2026-06-17T23:00:00Z','Estadio Toronto',false));
-allMatches.push(match('K2','K','group','Uzbekistán','Colombia','🇺🇿','🇨🇴','2026-06-18T02:00:00Z','Estadio Ciudad de México',false));
-allMatches.push(match('A3','A','group','República Checa','Sudáfrica','🇨🇿','🇿🇦','2026-06-18T16:00:00Z','Estadio Atlanta',false));
-allMatches.push(match('B3','B','group','Suiza','Bosnia y Herz.','🇨🇭','🇧🇦','2026-06-18T19:00:00Z','Estadio Los Ángeles',false));
-allMatches.push(match('B4','B','group','Canadá','Catar','🇨🇦','🇶🇦','2026-06-18T22:00:00Z','BC Place Vancouver',false));
-allMatches.push(match('A4','A','group','México','Corea del Sur','🇲🇽','🇰🇷','2026-06-19T01:00:00Z','Estadio Guadalajara',false));
-allMatches.push(match('D3','D','group','Estados Unidos','Australia','🇺🇸','🇦🇺','2026-06-19T19:00:00Z','Estadio Seattle',false));
-allMatches.push(match('C3','C','group','Escocia','Marruecos','🏴󠁧󠁢󠁳󠁣󠁴󠁿','🇲🇦','2026-06-19T22:00:00Z','Estadio Boston',false));
-allMatches.push(match('C4','C','group','Brasil','Haití','🇧🇷','🇭🇹','2026-06-20T00:30:00Z','Estadio Filadelfia',false));
-allMatches.push(match('D4','D','group','Turquía','Paraguay','🇹🇷','🇵🇾','2026-06-20T04:00:00Z','Estadio Bahía de San Francisco',false));
-allMatches.push(match('F3','F','group','Países Bajos','Suecia','🇳🇱','🇸🇪','2026-06-20T17:00:00Z','Estadio Houston',false));
-allMatches.push(match('E3','E','group','Alemania','Costa de Marfil','🇩🇪','🇨🇮','2026-06-20T20:00:00Z','Estadio Toronto',false));
-allMatches.push(match('E4','E','group','Ecuador','Curazao','🇪🇨','🇨🇼','2026-06-21T01:00:00Z','Estadio Kansas City',false));
-allMatches.push(match('F4','F','group','Túnez','Japón','🇹🇳','🇯🇵','2026-06-21T04:00:00Z','Estadio Monterrey',false));
-allMatches.push(match('H3','H','group','España','Arabia Saudí','🇪🇸','🇸🇦','2026-06-21T16:00:00Z','Estadio Atlanta',false));
-allMatches.push(match('G3','G','group','Bélgica','Irán','🇧🇪','🇮🇷','2026-06-21T19:00:00Z','Estadio Los Ángeles',false));
-allMatches.push(match('H4','H','group','Uruguay','Cabo Verde','🇺🇾','🇨🇻','2026-06-21T22:00:00Z','Estadio Miami',false));
-allMatches.push(match('G4','G','group','Nueva Zelanda','Egipto','🇳🇿','🇪🇬','2026-06-22T01:00:00Z','BC Place Vancouver',false));
-allMatches.push(match('J3','J','group','Argentina','Austria','🇦🇷','🇦🇹','2026-06-22T17:00:00Z','Estadio Dallas',false));
-allMatches.push(match('I3','I','group','Francia','Irak','🇫🇷','🇮🇶','2026-06-22T21:00:00Z','Estadio Filadelfia',false));
-allMatches.push(match('I4','I','group','Noruega','Senegal','🇳🇴','🇸🇳','2026-06-23T00:00:00Z','Estadio Nueva York Nueva Jersey',false));
-allMatches.push(match('J4','J','group','Jordania','Argelia','🇯🇴','🇩🇿','2026-06-23T03:00:00Z','Estadio Bahía de San Francisco',false));
-allMatches.push(match('K3','K','group','Portugal','Uzbekistán','🇵🇹','🇺🇿','2026-06-23T17:00:00Z','Estadio Houston',false));
-allMatches.push(match('L3','L','group','Inglaterra','Ghana','🏴󠁧󠁢󠁥󠁮󠁧󠁿','🇬🇭','2026-06-23T20:00:00Z','Estadio Boston',false));
-allMatches.push(match('L4','L','group','Panamá','Croacia','🇵🇦','🇭🇷','2026-06-23T23:00:00Z','Estadio Toronto',false));
-allMatches.push(match('K4','K','group','Colombia','RD Congo','🇨🇴','🇨🇩','2026-06-24T02:00:00Z','Estadio Guadalajara',false));
-allMatches.push(match('B5','B','group','Suiza','Canadá','🇨🇭','🇨🇦','2026-06-24T19:00:00Z','BC Place Vancouver',false));
-allMatches.push(match('B6','B','group','Bosnia y Herz.','Catar','🇧🇦','🇶🇦','2026-06-24T19:00:00Z','Estadio Seattle',false));
-allMatches.push(match('C5','C','group','Escocia','Brasil','🏴󠁧󠁢󠁳󠁣󠁴󠁿','🇧🇷','2026-06-24T22:00:00Z','Estadio Miami',false));
-allMatches.push(match('C6','C','group','Marruecos','Haití','🇲🇦','🇭🇹','2026-06-24T22:00:00Z','Estadio Atlanta',false));
-allMatches.push(match('A5','A','group','República Checa','México','🇨🇿','🇲🇽','2026-06-25T01:00:00Z','Estadio Ciudad de México',false));
-allMatches.push(match('A6','A','group','Sudáfrica','Corea del Sur','🇿🇦','🇰🇷','2026-06-25T01:00:00Z','Estadio Monterrey',false));
-allMatches.push(match('E5','E','group','Ecuador','Alemania','🇪🇨','🇩🇪','2026-06-25T20:00:00Z','Estadio Nueva York Nueva Jersey',false));
-allMatches.push(match('E6','E','group','Curazao','Costa de Marfil','🇨🇼','🇨🇮','2026-06-25T20:00:00Z','Estadio Filadelfia',false));
-allMatches.push(match('F5','F','group','Japón','Suecia','🇯🇵','🇸🇪','2026-06-25T23:00:00Z','Estadio Dallas',false));
-allMatches.push(match('F6','F','group','Túnez','Países Bajos','🇹🇳','🇳🇱','2026-06-25T23:00:00Z','Estadio Kansas City',false));
-allMatches.push(match('D5','D','group','Turquía','Estados Unidos','🇹🇷','🇺🇸','2026-06-26T02:00:00Z','Estadio Los Ángeles',false));
-allMatches.push(match('D6','D','group','Paraguay','Australia','🇵🇾','🇦🇺','2026-06-26T02:00:00Z','Estadio Bahía de San Francisco',false));
-allMatches.push(match('I5','I','group','Noruega','Francia','🇳🇴','🇫🇷','2026-06-26T19:00:00Z','Estadio Boston',false));
-allMatches.push(match('I6','I','group','Senegal','Irak','🇸🇳','🇮🇶','2026-06-26T19:00:00Z','Estadio Toronto',false));
-allMatches.push(match('H5','H','group','Cabo Verde','Arabia Saudí','🇨🇻','🇸🇦','2026-06-27T00:00:00Z','Estadio Houston',false));
-allMatches.push(match('H6','H','group','Uruguay','España','🇺🇾','🇪🇸','2026-06-27T00:00:00Z','Estadio Guadalajara',false));
-allMatches.push(match('G5','G','group','Egipto','Irán','🇪🇬','🇮🇷','2026-06-27T03:00:00Z','Estadio Seattle',false));
-allMatches.push(match('G6','G','group','Nueva Zelanda','Bélgica','🇳🇿','🇧🇪','2026-06-27T03:00:00Z','BC Place Vancouver',false));
-allMatches.push(match('L5','L','group','Panamá','Inglaterra','🇵🇦','🏴󠁧󠁢󠁥󠁮󠁧󠁿','2026-06-27T21:00:00Z','Estadio Nueva York Nueva Jersey',false));
-allMatches.push(match('L6','L','group','Croacia','Ghana','🇭🇷','🇬🇭','2026-06-27T21:00:00Z','Estadio Filadelfia',false));
-allMatches.push(match('K5','K','group','Colombia','Portugal','🇨🇴','🇵🇹','2026-06-27T23:30:00Z','Estadio Miami',false));
-allMatches.push(match('K6','K','group','RD Congo','Uzbekistán','🇨🇩','🇺🇿','2026-06-27T23:30:00Z','Estadio Atlanta',false));
-allMatches.push(match('J5','J','group','Argelia','Austria','🇩🇿','🇦🇹','2026-06-28T02:00:00Z','Estadio Kansas City',false));
-allMatches.push(match('J6','J','group','Jordania','Argentina','🇯🇴','🇦🇷','2026-06-28T02:00:00Z','Estadio Dallas',false));
-
-// Construir resultados desde partidos jugados
-allMatches.forEach(m=>{ if(m.played) matchResults.push({...m}); });
 // ============================================================
 // STATE
 // ============================================================
@@ -627,6 +547,7 @@ let filterGroup = 'upcoming';
 // MATCH UI
 // ============================================================
 function renderEvents(m) {
+  if (!m.events || !m.events.length) return '';
   const homeEvs = [], awayEvs = [];
   m.events.forEach(e=>{
     if(e.h!==undefined){ homeEvs.push(e); }
@@ -828,19 +749,19 @@ function applyLang(lang) {
 // INIT
 // ============================================================
 function init() {
-  buildFilters();
-  renderSchedule();
-  renderResults();
-  renderStandings();
-
   document.querySelectorAll('.lang-btn').forEach(btn=>{
     btn.addEventListener('click',()=>applyLang(btn.dataset.lang));
   });
 
-  setInterval(()=>{
+  loadMatchData();
+
+  setInterval(async ()=>{
+    if (DATA_LOADED) {
+      await loadMatchData();
+    }
     renderStandings();
     renderResults();
-  },30000);
+  },60000);
 }
 
 init();
