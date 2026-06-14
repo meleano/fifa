@@ -43,21 +43,6 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // Matches API
-  if (url.pathname === '/api/matches') {
-    const { default: handler } = await import('./api/matches.mjs');
-    const response = await handler(
-      new Request(`http://${req.headers.host}${req.url}`, {
-        method: req.method,
-        headers: new Headers(req.headers),
-      })
-    );
-    const data = await response.json();
-    res.writeHead(response.status, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
-    res.end(JSON.stringify(data));
-    return;
-  }
-
   // Archivos estáticos
   let filePath = path.join(__dirname, 'public', url.pathname === '/' ? 'index.html' : url.pathname);
   filePath = path.normalize(filePath);

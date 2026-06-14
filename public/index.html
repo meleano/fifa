@@ -500,8 +500,51 @@ function streamHLS(url, title) {
 }
 
 // ============================================================
-// DATOS DINÁMICOS — via openfootball
+// DATOS DINÁMICOS — via openfootball (GitHub raw, CORS *)
 // ============================================================
+const OPENFOOTBALL_URL = 'https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json';
+
+const FLAGS = {
+  'Mexico':'🇲🇽','South Africa':'🇿🇦','South Korea':'🇰🇷','Czech Republic':'🇨🇿',
+  'Canada':'🇨🇦','Bosnia & Herzegovina':'🇧🇦','Qatar':'🇶🇦','Switzerland':'🇨🇭',
+  'Brazil':'🇧🇷','Morocco':'🇲🇦','Haiti':'🇭🇹','Scotland':'🏴󠁧󠁢󠁳󠁣󠁴󠁿',
+  'USA':'🇺🇸','Paraguay':'🇵🇾','Australia':'🇦🇺','Turkey':'🇹🇷',
+  'Germany':'🇩🇪','Curaçao':'🇨🇼','Ivory Coast':'🇨🇮','Ecuador':'🇪🇨',
+  'Netherlands':'🇳🇱','Japan':'🇯🇵','Sweden':'🇸🇪','Tunisia':'🇹🇳',
+  'Belgium':'🇧🇪','Egypt':'🇪🇬','Iran':'🇮🇷','New Zealand':'🇳🇿',
+  'Spain':'🇪🇸','Cape Verde':'🇨🇻','Saudi Arabia':'🇸🇦','Uruguay':'🇺🇾',
+  'France':'🇫🇷','Senegal':'🇸🇳','Iraq':'🇮🇶','Norway':'🇳🇴',
+  'Argentina':'🇦🇷','Algeria':'🇩🇿','Austria':'🇦🇹','Jordan':'🇯🇴',
+  'Portugal':'🇵🇹','DR Congo':'🇨🇩','Uzbekistan':'🇺🇿','Colombia':'🇨🇴',
+  'England':'🏴󠁧󠁢󠁥󠁮󠁧󠁿','Croatia':'🇭🇷','Ghana':'🇬🇭','Panama':'🇵🇦',
+};
+const ROUND_MAP = {
+  'Matchday 1':'group','Matchday 2':'group','Matchday 3':'group',
+  'Matchday 4':'group','Matchday 5':'group','Matchday 6':'group',
+  'Matchday 7':'group','Matchday 8':'group','Matchday 9':'group',
+  'Matchday 10':'group','Matchday 11':'group','Matchday 12':'group',
+  'Matchday 13':'group','Matchday 14':'group','Matchday 15':'group',
+  'Matchday 16':'group','Matchday 17':'group',
+  'Round of 32':'r32','Round of 16':'r16',
+  'Quarter-final':'qf','Semi-final':'sf',
+  'Match for third place':'3rd','Final':'final',
+};
+
+function parseScore(s) {
+  if (!s || !s.ft || s.ft.length < 2) return null;
+  return [s.ft[0], s.ft[1]];
+}
+function parseDate(date, time) {
+  if (!date) return null;
+  let t = '19:00:00Z';
+  if (time) { const p = time.split(' '); if (p.length > 0) t = p[0] + ':00Z'; }
+  try { return new Date(date + 'T' + t).toISOString(); } catch { return null; }
+}
+function groupLetter(g) {
+  if (!g) return '?';
+  const m = g.match(/Group\s+(\w)/); return m ? m[1] : '?';
+}
+
 let GROUP_NAMES = ['A','B','C','D','E','F','G','H','I','J','K','L'];
 let GROUPS = {};
 let allMatches = [];
@@ -513,25 +556,54 @@ async function loadMatchData() {
     const notice = document.getElementById('dataNotice');
     notice.textContent = 'Cargando datos del torneo...';
 
-    const res = await fetch('/api/matches');
+    const res = await fetch(OPENFOOTBALL_URL);
     if (!res.ok) throw new Error('HTTP ' + res.status);
 
-    const data = await res.json();
-    GROUP_NAMES = data.groupNames || GROUP_NAMES;
-    GROUPS = data.groups || {};
-    allMatches = data.matches || [];
-    matchResults = data.results || [];
+    const raw = await res.json();
+    const matches = raw.matches || [];
+
+    let counter = 0;
+    const teamGroup = {};
+
+    allMatches = matches.map(m => {
+      counter++;
+      const group = groupLetter(m.group);
+      const round = ROUND_MAP[m.round] || 'group';
+      if (group !== '?' && round === 'group') {
+        if (!teamGroup[m.team1]) teamGroup[m.team1] = group;
+        if (!teamGroup[m.team2]) teamGroup[m.team2] = group;
+      }
+      const score = parseScore(m.score);
+      const played = score !== null;
+      return {
+        id: 'M' + counter, group, round,
+        home: m.team1, away: m.team2,
+        hf: FLAGS[m.team1] || '🏳️', af: FLAGS[m.team2] || '🏳️',
+        date: parseDate(m.date, m.time),
+        venue: m.ground || m.location || 'Por definir',
+        played,
+        homeScore: played ? score[0] : null,
+        awayScore: played ? score[1] : null,
+      };
+    });
+
+    GROUPS = {};
+    for (const g of 'ABCDEFGHIJKL') {
+      const teams = Object.entries(teamGroup).filter(([,grp]) => grp === g).map(([n]) => ({ n, f: FLAGS[n] || '🏳️' }));
+      if (teams.length) GROUPS[g] = { teams };
+    }
+    GROUP_NAMES = Object.keys(GROUPS);
+    matchResults = allMatches.filter(m => m.played);
     DATA_LOADED = true;
 
     notice.textContent = 'Datos reales · Copa Mundial de la FIFA 2026™ · vía openfootball';
-
     buildFilters();
     renderSchedule();
     renderResults();
     renderStandings();
   } catch (e) {
-    console.warn('Error cargando datos, usando fallback:', e);
-    document.getElementById('dataNotice').textContent = 'Usando datos predeterminados · ' + new Date().toLocaleDateString();
+    console.warn('Error cargando datos:', e);
+    document.getElementById('dataNotice').textContent = 'Error al cargar datos · ' + e.message;
     buildFilters();
     renderSchedule();
     renderResults();
