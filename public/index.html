@@ -229,12 +229,27 @@ nav{width:100%;justify-content:center;flex-wrap:wrap}
 
       <div class="section-header-group">
         <i class="fa-solid fa-tower-broadcast section-header-icon"></i>
-        <div class="section-header" data-i18n="stream.fox">Fox Sports</div>
+        <div class="section-header" data-i18n="stream.spain">España — RTVE</div>
       </div>
-      <div class="channel-card" onclick="streamHLS('http://23.237.104.106:8080/USA_FOX_DEPORTES/index.m3u8','FOX Deportes')">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/FOX_Deportes_logo.png/960px-FOX_Deportes_logo.png" class="card-img" style="background:rgba(255,255,255,0.02)">
-        <div class="card-info"><h4>FOX Deportes</h4><p>Global Feed · Estados Unidos</p></div>
-        <span class="tag green">1080p</span>
+      <div class="channel-card" onclick="streamHLS('https://rtvelivestream.rtve.es/rtvesec/la1/la1_main.m3u8','RTVE La 1')">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/RTVE_logo_2023.svg/1200px-RTVE_logo_2023.svg.png" class="card-img" style="background:#fff">
+        <div class="card-info"><h4>RTVE La 1</h4><p>RTVE · España</p></div>
+        <span class="tag green">FHD</span>
+      </div>
+      <div class="channel-card" onclick="streamHLS('https://rtvelivestream.rtve.es/rtvesec/la2/la2_main.m3u8','RTVE La 2')">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/RTVE_logo_2023.svg/1200px-RTVE_logo_2023.svg.png" class="card-img" style="background:#fff">
+        <div class="card-info"><h4>RTVE La 2</h4><p>RTVE · España</p></div>
+        <span class="tag green">HD</span>
+      </div>
+      <div class="channel-card" onclick="streamHLS('https://rtvelivestream.rtve.es/rtvesec/tdp/tdp_main.m3u8','Teledeporte')">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/RTVE_logo_2023.svg/1200px-RTVE_logo_2023.svg.png" class="card-img" style="background:#fff">
+        <div class="card-info"><h4>Teledeporte (TDP)</h4><p>RTVE · España</p></div>
+        <span class="tag green">HD</span>
+      </div>
+      <div class="channel-card" onclick="streamHLS('https://rtvelivestream.rtve.es/rtvesec/24h/24h_main.m3u8','24h')">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/RTVE_logo_2023.svg/1200px-RTVE_logo_2023.svg.png" class="card-img" style="background:#fff">
+        <div class="card-info"><h4>Canal 24 Horas</h4><p>RTVE · España</p></div>
+        <span class="tag green">HD</span>
       </div>
 
       <div class="section-header-group">
@@ -274,31 +289,6 @@ nav{width:100%;justify-content:center;flex-wrap:wrap}
       </div>
 
       <div class="section-header-group">
-        <i class="fa-solid fa-tower-broadcast section-header-icon"></i>
-        <div class="section-header" data-i18n="stream.spain">España — RTVE</div>
-      </div>
-      <div class="channel-card" onclick="streamHLS('https://rtvelivestream.rtve.es/rtvesec/la1/la1_main.m3u8','RTVE La 1')">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/RTVE_logo_2023.svg/1200px-RTVE_logo_2023.svg.png" class="card-img" style="background:#fff">
-        <div class="card-info"><h4>RTVE La 1</h4><p>RTVE · España</p></div>
-        <span class="tag green">FHD</span>
-      </div>
-      <div class="channel-card" onclick="streamHLS('https://rtvelivestream.rtve.es/rtvesec/la2/la2_main.m3u8','RTVE La 2')">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/RTVE_logo_2023.svg/1200px-RTVE_logo_2023.svg.png" class="card-img" style="background:#fff">
-        <div class="card-info"><h4>RTVE La 2</h4><p>RTVE · España</p></div>
-        <span class="tag green">HD</span>
-      </div>
-      <div class="channel-card" onclick="streamHLS('https://rtvelivestream.rtve.es/rtvesec/tdp/tdp_main.m3u8','Teledeporte')">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/RTVE_logo_2023.svg/1200px-RTVE_logo_2023.svg.png" class="card-img" style="background:#fff">
-        <div class="card-info"><h4>Teledeporte (TDP)</h4><p>RTVE · España</p></div>
-        <span class="tag green">HD</span>
-      </div>
-      <div class="channel-card" onclick="streamHLS('https://rtvelivestream.rtve.es/rtvesec/24h/24h_main.m3u8','24h')">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/RTVE_logo_2023.svg/1200px-RTVE_logo_2023.svg.png" class="card-img" style="background:#fff">
-        <div class="card-info"><h4>Canal 24 Horas</h4><p>RTVE · España</p></div>
-        <span class="tag green">HD</span>
-      </div>
-
-      <div class="section-header-group">
         <i class="fa-solid fa-futbol section-header-icon"></i>
         <div class="section-header" data-i18n="stream.extra">Fútbol</div>
       </div>
@@ -324,11 +314,6 @@ nav{width:100%;justify-content:center;flex-wrap:wrap}
         <span class="tag green">1080p</span>
       </div>
 
-      <div class="section-header-group">
-        <i class="fa-solid fa-tower-broadcast section-header-icon"></i>
-        <div class="section-header">Sky Sports</div>
-      </div>
-      <div class="section-sub-notice"><i class="fa-solid fa-triangle-exclamation"></i> <span>Suscripción requerida · Prueba via proxy</span></div>
     </aside>
   </div>
 </section>
