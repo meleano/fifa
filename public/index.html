@@ -41,22 +41,21 @@ nav a:hover::after{width:100%}
 #broadcast{padding:24px;position:relative;z-index:1;max-width:1600px;margin:0 auto}
 .broadcast-grid{display:grid;grid-template-columns:1fr 420px;gap:30px}
 @media(max-width:1200px){.broadcast-grid{grid-template-columns:1fr}}
-.player-container{background:var(--surface);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:var(--radius);padding:25px;box-shadow:var(--shadow)}
-.video-box{position:relative;width:100%;padding-top:56.25%;background:#000;border-radius:20px;overflow:hidden;border:1px solid rgba(255,255,255,0.05)}
+.player-container{background:var(--surface);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+.video-box{position:relative;width:100%;padding-top:56.25%;background:#000;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.05)}
 .video-js{position:absolute;top:0;left:0;width:100%!important;height:100%!important}
 
-.player-info{gap:15px;margin-top:25px;padding:20px;background:rgba(0,0,0,0.2);border-radius:20px;display:flex;flex-direction:column}
+.player-info{gap:8px;margin-top:12px;padding:12px 16px;background:rgba(0,0,0,0.2);border-radius:12px;display:flex;align-items:center;justify-content:space-between}
 .player-main-details{display:flex;align-items:center}
-#channel-logo-display{height:60px;margin-right:25px;width:100px;object-fit:contain}
-.status-dot{height:10px;width:10px;background:var(--accent2);border-radius:50%;display:inline-block;margin-right:10px;box-shadow:0 0 10px var(--accent2);animation:pulse2 1.5s infinite}
+#channel-logo-display{height:36px;margin-right:16px;width:60px;object-fit:contain}
+.status-dot{height:8px;width:8px;background:var(--accent2);border-radius:50%;display:inline-block;margin-right:8px;box-shadow:0 0 10px var(--accent2);animation:pulse2 1.5s infinite}
 @keyframes pulse2{0%{opacity:1}50%{opacity:0.4}100%{opacity:1}}
-#feed-badge{font-size:0.8rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent2)}
-#now-playing-title{margin:5px 0 0;font-size:1.5rem;font-weight:800}
-.player-loading-notice{background:rgba(255,159,67,0.08);border-left:4px solid var(--orange);padding:10px 15px;border-radius:4px 12px 12px 4px;font-size:0.85rem;color:#ffdca3;display:flex;align-items:center;gap:10px}
+#feed-badge{font-size:0.7rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent2)}
+#now-playing-title{margin:2px 0 0;font-size:1.1rem;font-weight:800}
+.player-loading-notice{background:rgba(255,159,67,0.08);border-left:4px solid var(--orange);padding:6px 10px;border-radius:4px 8px 8px 4px;font-size:0.75rem;color:#ffdca3;display:flex;align-items:center;gap:8px;white-space:nowrap}
 
 /* SIDEBAR — canal cards como referencia */
-.sidebar{display:flex;flex-direction:column;gap:8px;overflow-y:auto;padding-right:6px}
-@media(min-width:1201px){.sidebar{max-height:calc((100vw - 484px) * 9 / 16 + 50px)}}
+.sidebar{display:flex;flex-direction:column;gap:6px;overflow-y:auto;padding-right:4px;max-height:100%}
 @media(max-width:1200px){.sidebar{max-height:none}}
 .sidebar::-webkit-scrollbar{width:4px}
 .sidebar::-webkit-scrollbar-track{background:var(--bg2)}
@@ -587,6 +586,7 @@ async function loadMatchData() {
     renderSchedule();
     renderResults();
     renderStandings();
+    syncSidebarHeight();
   } catch (e) {
     console.warn('Error cargando datos:', e);
     document.getElementById('dataNotice').textContent = 'Error al cargar datos · ' + e.message;
@@ -595,6 +595,7 @@ async function loadMatchData() {
     renderResults();
     renderStandings();
   }
+  syncSidebarHeight();
 }
 // ============================================================
 // STATE
@@ -804,6 +805,17 @@ function applyLang(lang) {
 }
 
 // ============================================================
+// SIDEBAR HEIGHT SYNC
+// ============================================================
+function syncSidebarHeight() {
+  const sidebar = document.getElementById('sidebar');
+  const videoBox = document.querySelector('.video-box');
+  if (!sidebar || !videoBox) return;
+  const vh = videoBox.getBoundingClientRect().height;
+  if (vh > 100) sidebar.style.maxHeight = vh + 'px';
+}
+
+// ============================================================
 // INIT
 // ============================================================
 function init() {
@@ -813,12 +825,15 @@ function init() {
 
   loadMatchData();
 
+  window.addEventListener('resize', syncSidebarHeight);
+
   setInterval(async ()=>{
     if (DATA_LOADED) {
       await loadMatchData();
     }
     renderStandings();
     renderResults();
+    syncSidebarHeight();
   },60000);
 }
 
