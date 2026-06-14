@@ -4,6 +4,7 @@
   "outputDirectory": "public",
   "rewrites": [
     { "source": "/api/proxy", "destination": "/api/proxy.mjs" },
+    { "source": "/api/matches", "destination": "/api/matches.mjs" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
