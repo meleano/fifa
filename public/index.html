@@ -34,6 +34,11 @@ nav a:hover{color:var(--accent)}
 nav a::after{content:'';position:absolute;bottom:-4px;left:0;width:0;height:2px;background:var(--accent);transition:width 0.3s}
 nav a:hover::after{width:100%}
 .lang-wrap{display:flex;gap:2px;background:var(--surface);border-radius:6px;padding:2px;border:1px solid var(--border)}
+.team-search{position:relative;margin:0 8px}
+.team-search select{background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:6px 28px 6px 10px;font-size:0.78rem;font-weight:600;cursor:pointer;outline:none;transition:border-color 0.2s;max-width:160px;appearance:none;-webkit-appearance:none}
+.team-search select:hover,.team-search select:focus{border-color:var(--accent)}
+.team-search select option{background:var(--bg2);color:var(--text)}
+.team-search::after{content:'🔍';position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:0.7rem;pointer-events:none}
 .lang-btn{padding:4px 10px;border:none;background:transparent;color:var(--text3);font-size:0.75rem;font-weight:700;cursor:pointer;border-radius:4px;transition:all 0.25s;text-transform:uppercase;letter-spacing:0.05em}
 .lang-btn.active{background:var(--accent);color:#000;box-shadow:0 0 12px rgba(46,204,113,0.3)}
 
@@ -183,6 +188,11 @@ nav{width:100%;justify-content:center;flex-wrap:wrap}
     <a href="#standings" data-i18n="nav.standings">Clasificación</a>
   </nav>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <div class="team-search">
+    <select id="teamSelect" onchange="onTeamSelect(this.value)">
+      <option value="">— Equipo —</option>
+    </select>
+  </div>
   <div class="lang-wrap">
     <button class="lang-btn active" data-lang="es">ES</button>
     <button class="lang-btn" data-lang="en">EN</button>
@@ -594,6 +604,7 @@ async function loadMatchData() {
     DATA_LOADED = true;
 
     notice.textContent = 'Datos reales · Copa Mundial de la FIFA 2026™ · vía openfootball';
+    buildTeamSelect();
     buildFilters();
     renderSchedule();
     renderResults();
@@ -602,6 +613,7 @@ async function loadMatchData() {
   } catch (e) {
     console.warn('Error cargando datos:', e);
     document.getElementById('dataNotice').textContent = 'Error al cargar datos · ' + e.message;
+    buildTeamSelect();
     buildFilters();
     renderSchedule();
     renderResults();
@@ -687,6 +699,9 @@ function renderSchedule() {
     ms = ms.filter(m=>m.played);
   }else if(filterGroup==='upcoming'){
     ms = ms.filter(m=>!m.played);
+  }else if(filterGroup.startsWith('team:')){
+    const team = filterGroup.slice(5);
+    ms = ms.filter(m=>m.home===team||m.away===team);
   }else if(filterGroup!=='all'){
     ms = ms.filter(m=>m.group===filterGroup);
   }
@@ -781,6 +796,37 @@ function renderStandings() {
 // ============================================================
 // FILTERS
 // ============================================================
+function buildTeamSelect() {
+  const sel = document.getElementById('teamSelect');
+  if (!sel) return;
+  const val = sel.value;
+  sel.innerHTML = '<option value="">— Equipo —</option>';
+  const teams = new Set();
+  allMatches.forEach(m => {
+    if (m.home && !m.home.match(/^\d|[WL]/)) teams.add(m.home);
+    if (m.away && !m.away.match(/^\d|[WL]/)) teams.add(m.away);
+  });
+  const sorted = [...teams].sort((a, b) => a.localeCompare(b));
+  sorted.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t; opt.textContent = (FLAGS[t]||'') + ' ' + t;
+    sel.appendChild(opt);
+  });
+  sel.value = val;
+}
+
+function onTeamSelect(team) {
+  if (!team) {
+    filterGroup = 'upcoming';
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === filterGroup));
+  } else {
+    filterGroup = 'team:' + team;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  }
+  renderSchedule();
+  document.getElementById('schedule').scrollIntoView({ behavior: 'smooth' });
+}
+
 function buildFilters() {
   const container = document.getElementById('scheduleFilters');
   const groups = {all:t('filter.all'),live:t('filter.live'),played:t('filter.played'),upcoming:t('filter.upcoming')};
